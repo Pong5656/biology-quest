@@ -1,0 +1,484 @@
+@import "tailwindcss";
+
+/* =====================================================
+   8-BIT RETRO THEME — ชุดสีคลาสสิก NES
+   ===================================================== */
+:root {
+  --nes-sky: #5c94fc;
+  --nes-ground: #c84c0c;
+  --nes-brick: #e45c10;
+  --nes-dark: #212529;
+  --nes-white: #fff;
+  --nes-yellow: #f8d800;
+  --nes-green: #00a800;
+  --nes-red: #e40058;
+  --nes-blue: #0058f8;
+  --nes-gray: #7c7c7c;
+  --font-pixel: "Press Start 2P", "Prompt", monospace;
+  --font-thai: "Prompt", "Press Start 2P", sans-serif;
+}
+
+html,
+body {
+  font-family: var(--font-thai);
+  background: var(--nes-dark);
+  color: var(--nes-white);
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+}
+
+/* NES.css ตั้งฟอนต์ทั้งหน้าเป็น Press Start 2P — บังคับให้ภาษาไทยใช้ Prompt */
+body {
+  font-family: var(--font-thai) !important;
+}
+.font-pixel {
+  font-family: var(--font-pixel) !important;
+}
+.font-thai {
+  font-family: var(--font-thai) !important;
+}
+.nes-container.is-dark {
+  border-color: #fff;
+}
+.nes-container.with-title > .title {
+  background: #000 !important;
+  padding: 0 8px;
+}
+
+/* โหนดบทที่พร้อมเล่น */
+@keyframes soft-glow {
+  from {
+    filter: drop-shadow(0 0 0 rgba(248, 216, 0, 0));
+  }
+  to {
+    filter: drop-shadow(0 0 10px rgba(248, 216, 0, 0.9));
+  }
+}
+.q-glow-soft {
+  animation: soft-glow 0.9s ease-in-out infinite alternate;
+}
+
+/* ปุ่มควบคุมสัมผัส */
+.touch-btn {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  font-family: var(--font-pixel) !important;
+  border: 4px solid #000;
+  box-shadow:
+    inset -4px -4px 0 rgba(0, 0, 0, 0.35),
+    0 4px 0 #000;
+  color: #fff;
+}
+.touch-btn:active,
+.touch-btn.pressed {
+  transform: translateY(3px);
+  box-shadow: inset -4px -4px 0 rgba(0, 0, 0, 0.35);
+  filter: brightness(1.2);
+}
+.pixel-canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* กรอบพิกเซลแบบ NES (ขอบหนาสองชั้น) */
+.px-border {
+  border: 4px solid #000;
+  box-shadow:
+    0 0 0 4px #fff,
+    0 0 0 8px #000;
+}
+.px-border-dark {
+  border: 4px solid #fff;
+  box-shadow:
+    0 0 0 4px #000,
+    0 0 0 8px #fff;
+}
+
+/* กล่องข้อความ RPG */
+.rpg-box {
+  background: #0d1b4c;
+  border: 4px solid #fff;
+  outline: 4px solid #0d1b4c;
+  box-shadow: 0 0 0 8px #fff;
+  color: #fff;
+}
+
+/* ปุ่มพิกเซล */
+.px-btn {
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  line-height: 1;
+  padding: 14px 18px;
+  color: #000;
+  background: #fff;
+  border: 4px solid #000;
+  box-shadow:
+    inset -4px -4px 0 #adafbc,
+    4px 4px 0 #000;
+  cursor: pointer;
+  transition: transform 0.05s steps(1);
+  text-transform: uppercase;
+  user-select: none;
+}
+.px-btn:hover {
+  background: #f1f1f1;
+}
+.px-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow:
+    inset -4px -4px 0 #adafbc,
+    0 0 0 #000;
+}
+.px-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.px-btn-primary {
+  background: #209cee;
+  color: #fff;
+  box-shadow:
+    inset -4px -4px 0 #006bb3,
+    4px 4px 0 #000;
+}
+.px-btn-primary:hover {
+  background: #108de0;
+}
+.px-btn-success {
+  background: #92cc41;
+  color: #fff;
+  box-shadow:
+    inset -4px -4px 0 #4aa52e,
+    4px 4px 0 #000;
+}
+.px-btn-success:hover {
+  background: #76c442;
+}
+.px-btn-danger {
+  background: #e76e55;
+  color: #fff;
+  box-shadow:
+    inset -4px -4px 0 #8c2022,
+    4px 4px 0 #000;
+}
+.px-btn-warning {
+  background: #f7d51d;
+  color: #000;
+  box-shadow:
+    inset -4px -4px 0 #e59400,
+    4px 4px 0 #000;
+}
+.px-btn-thai {
+  font-family: var(--font-thai);
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: none;
+}
+
+/* บล็อก ? สไตล์มาริโอ */
+.q-block {
+  width: 112px;
+  height: 112px;
+  background: #f8b800;
+  border: 6px solid #000;
+  box-shadow:
+    inset 8px 8px 0 #fcd87c,
+    inset -8px -8px 0 #a85c00,
+    0 0 24px 6px rgba(248, 216, 0, 0.6);
+  font-family: var(--font-pixel);
+  font-size: 48px;
+  color: #000;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  animation: q-bounce 1s steps(4) infinite, q-glow 1.2s ease-in-out infinite alternate;
+}
+.q-block.used {
+  background: #a85c00;
+  box-shadow:
+    inset 8px 8px 0 #c87800,
+    inset -8px -8px 0 #5c3000;
+  animation: none;
+  cursor: default;
+}
+@keyframes q-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-16px);
+  }
+}
+@keyframes q-glow {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.25);
+  }
+}
+@keyframes q-hit {
+  0% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-40px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+.q-block.hit {
+  animation: q-hit 0.35s steps(5);
+}
+
+/* พื้นดินอิฐ */
+.brick-ground {
+  background-color: #c84c0c;
+  background-image:
+    linear-gradient(#000 2px, transparent 2px),
+    linear-gradient(90deg, #000 2px, transparent 2px),
+    linear-gradient(#e45c10 1px, transparent 1px);
+  background-size:
+    32px 32px,
+    32px 32px,
+    32px 16px;
+  border-top: 6px solid #000;
+}
+
+/* เมฆพิกเซล */
+.px-cloud {
+  position: absolute;
+  width: 96px;
+  height: 36px;
+  background: #fff;
+  border-radius: 0;
+  box-shadow:
+    24px -18px 0 0 #fff,
+    48px -10px 0 0 #fff,
+    -6px -6px 0 0 #fff;
+  opacity: 0.95;
+  animation: cloud-drift linear infinite;
+}
+@keyframes cloud-drift {
+  from {
+    transform: translateX(-150px);
+  }
+  to {
+    transform: translateX(110vw);
+  }
+}
+
+/* ตัวละครเด้ง */
+@keyframes hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.anim-hop {
+  animation: hop 0.6s steps(2) infinite;
+}
+
+/* กะพริบ (Press Start) */
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.anim-blink {
+  animation: blink 1s steps(1) infinite;
+}
+
+/* สั่น (โดนดาเมจ) */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-8px, 2px);
+  }
+  40% {
+    transform: translate(8px, -2px);
+  }
+  60% {
+    transform: translate(-6px, 0);
+  }
+  80% {
+    transform: translate(6px, 0);
+  }
+}
+.anim-shake {
+  animation: shake 0.4s steps(5);
+}
+
+/* แฟลชแดง (โดนดาเมจ) */
+@keyframes flash-red {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(228, 0, 88, 0.5);
+  }
+}
+.anim-flash-red {
+  animation: flash-red 0.4s steps(2);
+}
+
+/* บอสโดนโจมตี กระพริบขาว */
+@keyframes boss-hurt {
+  0%,
+  100% {
+    filter: none;
+    transform: translateX(0);
+  }
+  25% {
+    filter: brightness(5) grayscale(1);
+    transform: translateX(-10px);
+  }
+  50% {
+    filter: none;
+    transform: translateX(10px);
+  }
+  75% {
+    filter: brightness(5) grayscale(1);
+    transform: translateX(-6px);
+  }
+}
+.anim-boss-hurt {
+  animation: boss-hurt 0.5s steps(4);
+}
+@keyframes boss-idle {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.04);
+  }
+}
+.anim-boss-idle {
+  animation: boss-idle 1.4s ease-in-out infinite;
+}
+
+/* Level Cleared ป๊อปอัป */
+@keyframes pop-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.anim-pop {
+  animation: pop-in 0.4s steps(6) forwards;
+}
+
+/* ดาวลอยขึ้น */
+@keyframes rise {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-80px);
+    opacity: 0;
+  }
+}
+.anim-rise {
+  animation: rise 0.9s steps(8) forwards;
+}
+
+/* X สีแดงใหญ่ */
+@keyframes x-stamp {
+  0% {
+    transform: scale(3) rotate(-20deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(-10deg);
+    opacity: 1;
+  }
+}
+.anim-x {
+  animation: x-stamp 0.3s steps(4) forwards;
+}
+
+/* ตัวหนังสือพิมพ์ทีละตัว (cursor) */
+.type-cursor::after {
+  content: "▼";
+  display: inline-block;
+  margin-left: 6px;
+  animation: blink 0.8s steps(1) infinite;
+}
+
+/* หลอด HP */
+.hp-bar {
+  height: 20px;
+  border: 4px solid #000;
+  background: #333;
+  box-shadow: 0 0 0 2px #fff;
+}
+.hp-bar > div {
+  height: 100%;
+  transition: width 0.3s steps(6);
+}
+
+/* Timer */
+.timer-danger {
+  color: #ff2a2a !important;
+  animation: blink 0.5s steps(1) infinite;
+  text-shadow: 0 0 8px #ff2a2a;
+}
+
+/* Scanline overlay ให้ความรู้สึก CRT */
+.crt::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.12) 3px
+  );
+  z-index: 50;
+}
+
+/* เส้นทางบนแผนที่ */
+.map-path {
+  background-image: radial-gradient(#fff 3px, transparent 3px);
+  background-size: 14px 14px;
+  background-repeat: repeat-x;
+  background-position: center;
+}
+
+/* Scrollbar พิกเซล */
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-thumb {
+  background: #fff;
+  border: 3px solid #000;
+}
+::-webkit-scrollbar-track {
+  background: #000;
+}
