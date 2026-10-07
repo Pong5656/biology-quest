@@ -4,6 +4,8 @@ import { pgTable, text, integer, boolean, timestamp, primaryKey } from "drizzle-
 export const players = pgTable("players", {
   playerId: text("player_id").primaryKey(),
   name: text("name").notNull().default("นักชีววิทยา"),
+  /** กระเป๋าเหรียญสะสมจากการเล่น (ใช้แลกคำใบ้ในด่านบอส) */
+  coins: integer("coins").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -32,6 +32,8 @@ export interface LevelData {
   tiles: Uint8Array;
   spawn: { x: number; y: number };
   enemies: { x: number; y: number }[];
+  /** ไอเทม: coin (เหรียญ) / heart (ฟื้นฟู 1 HP) / star (พลัง 3 วิ) */
+  items: { kind: "coin" | "heart" | "star"; x: number; y: number }[];
   boss: { x: number; y: number; w: number; h: number };
   gateCol: number;
   arenaStartCol: number;
@@ -50,6 +52,8 @@ export function buildLevel(blockCount: number): LevelData {
     if (c >= 0 && c < cols && r >= 0 && r < ROWS) tiles[r * cols + c] = t;
   };
   const enemies: { x: number; y: number }[] = [];
+  const items: LevelData["items"] = [];
+  const coin = (c: number, r: number) => items.push({ kind: "coin", x: c * TILE + 4, y: r * TILE + 4 });
 
   // พื้นดินทั้งด่าน
   for (let c = 0; c < cols; c++) {
@@ -86,16 +90,21 @@ export function buildLevel(blockCount: number): LevelData {
         set(x0 + 6, 8, Tile.Question);
         set(x0 + 7, 8, Tile.Brick);
         if (i > 0) enemy(x0 + 11);
+        coin(x0 + 6, 6); // เหรียญเหนือบล็อก ?
         break;
       case 1: // ท่อ + บล็อก
         pipe(x0 + 2, 2);
         set(x0 + 8, 8, Tile.Question);
         enemy(x0 + 11);
+        coin(x0 + 2, 9);
+        coin(x0 + 3, 9); // เหรียญบนท่อ
         break;
       case 2: // หลุม + แท่นลอย + บล็อกด้านบน
         pit(x0 + 2, 3);
         for (let c = x0 + 6; c <= x0 + 10; c++) set(c, 9, Tile.Brick);
         set(x0 + 8, 5, Tile.Question);
+        coin(x0 + 7, 8);
+        coin(x0 + 9, 8); // เหรียญบนแท่นลอย
         break;
       case 3: // บันไดหิน ขึ้น-ลง
         column(x0 + 2, 1, Tile.Stone);
@@ -105,14 +114,32 @@ export function buildLevel(blockCount: number): LevelData {
         column(x0 + 6, 1, Tile.Stone);
         set(x0 + 9, 8, Tile.Question);
         enemy(x0 + 11);
+        coin(x0 + 4, 8);
+        coin(x0 + 9, 6); // เหรียญบนบันได + เหนือบล็อก
         break;
       case 4: // แถวอิฐ + หลุมเล็ก
         for (let c = x0 + 4; c <= x0 + 8; c++) set(c, 8, Tile.Brick);
         set(x0 + 6, 8, Tile.Question);
         enemy(x0 + 9);
         pit(x0 + 11, 2);
+        coin(x0 + 6, 6);
+        coin(x0 + 10, 10);
+        coin(x0 + 13, 10); // เหรียญนำทางข้ามหลุม
         break;
     }
+  }
+
+  // หัวใจฟื้นฟู (3 ดวงต่อระดับ: ช่วงต้น กลาง ปลาย)
+  for (const seg of [3, 9, 15]) {
+    if (seg < blockCount) {
+      const x0 = START + seg * SEG;
+      items.push({ kind: "heart", x: (x0 + 9) * TILE + 2, y: 7 * TILE + 2 });
+    }
+  }
+  // ดาวพลัง (1 ดวง สูงมาก ต้องกระโดดบนบล็อก/อิฐถึง)
+  if (blockCount > 7) {
+    const x0 = START + 7 * SEG;
+    items.push({ kind: "star", x: (x0 + 8) * TILE + 2, y: 4 * TILE + 2 });
   }
 
   // ----- ลานบอส -----
@@ -133,6 +160,7 @@ export function buildLevel(blockCount: number): LevelData {
     tiles,
     spawn: { x: 3 * TILE, y: (GROUND_ROW - 1) * TILE },
     enemies,
+    items,
     boss: { x: (arenaStartCol + 12) * TILE, y: GROUND_ROW * TILE - bossH, w: bossW, h: bossH },
     gateCol,
     arenaStartCol,

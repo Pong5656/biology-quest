@@ -12,6 +12,7 @@ import { useState } from "react";
 import type { KeywordQuestion } from "@/data/types";
 import { PlayerAvatar, PxButton } from "@/components/game/Pixels";
 import { sfx } from "@/lib/sfx";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   questions: KeywordQuestion[];
@@ -21,6 +22,7 @@ interface Props {
 type Phase = "idle" | "bump" | "ask" | "correct" | "wrong" | "done";
 
 export default function KeywordCheck({ questions, onComplete }: Props) {
+  const { t } = useI18n();
   const [current, setCurrent] = useState(0);
   const [phase, setPhase] = useState<Phase>("idle");
   const [picked, setPicked] = useState<number | null>(null);
@@ -75,10 +77,10 @@ export default function KeywordCheck({ questions, onComplete }: Props) {
 
       <div className="relative z-10 mb-6 flex flex-wrap items-center justify-between gap-2">
         <div className="bg-black px-3 py-2 font-thai text-sm text-white">
-          🔑 มินิเกมคีย์เวิร์ด — ตอบถูกให้ครบ <b className="text-yellow-300">{questions.length}</b> บล็อก
+          🔑 {t("s3.title")} — {t("s3.goal")} <b className="text-yellow-300">{questions.length}</b>
         </div>
         <div className="bg-black px-3 py-2 font-pixel text-[10px] text-white">
-          🪙 x{String(phase === "done" ? questions.length : current + (phase === "correct" ? 1 : 0)).padStart(2, "0")} • ✖ {mistakes}
+          🪙 x{String(phase === "done" ? questions.length : current + (phase === "correct" ? 1 : 0)).padStart(2, "0")} • ✖ {t("s3.mistakes")} {mistakes}
         </div>
       </div>
 
@@ -119,10 +121,10 @@ export default function KeywordCheck({ questions, onComplete }: Props) {
       <div className="relative z-10 mx-auto mt-4 max-w-2xl">
         {phase === "idle" && (
           <div className="rpg-box anim-pop p-4 text-center font-thai">
-            คลิกบล็อก <span className="font-pixel text-yellow-300">[ ? ]</span> ที่ {current + 1} เพื่อเปิดคำถาม!
+            {t("s3.hit")} {current + 1}
             <div className="mt-3">
               <PxButton variant="warning" thai onClick={() => hit(current)}>
-                🆙 กระโดดชน!
+              {t("s3.jump")}
               </PxButton>
             </div>
           </div>
@@ -147,9 +149,9 @@ export default function KeywordCheck({ questions, onComplete }: Props) {
 
             {phase === "correct" && (
               <div className="anim-pop mt-4 flex flex-wrap items-center justify-between gap-3 border-t-4 border-white/30 pt-3">
-                <div className="font-thai text-sm text-green-300">✅ ถูกต้อง! {q.explanation}</div>
+                <div className="font-thai text-sm text-green-300">{t("s3.correct")} {q.explanation}</div>
                 <PxButton variant="success" thai onClick={next}>
-                  {current === questions.length - 1 ? "สรุปผล ➔" : "บล็อกถัดไป ➔"}
+                  {current === questions.length - 1 ? t("s3.finish") : t("s3.next")}
                 </PxButton>
               </div>
             )}
@@ -157,10 +159,10 @@ export default function KeywordCheck({ questions, onComplete }: Props) {
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t-4 border-white/30 pt-3">
                 <div className="flex items-center gap-3">
                   <span className="anim-x font-pixel text-4xl text-red-500 drop-shadow-[3px_3px_0_#000]">✖</span>
-                  <span className="font-thai text-sm text-red-300">ยังไม่ใช่! ลองคิดอีกครั้ง</span>
+                  <span className="font-thai text-sm text-red-300">{t("s3.wrong")}</span>
                 </div>
                 <PxButton variant="danger" thai onClick={retry}>
-                  ↻ ลองใหม่
+                  {t("s3.retry")}
                 </PxButton>
               </div>
             )}
@@ -169,13 +171,13 @@ export default function KeywordCheck({ questions, onComplete }: Props) {
 
         {phase === "done" && (
           <div className="anim-pop flex flex-col items-center gap-4 text-center">
-            <div className="px-border bg-green-500 px-6 py-4 font-pixel text-lg text-black sm:text-2xl">KEYWORDS CLEAR!</div>
+            <div className="px-border bg-green-500 px-6 py-4 font-pixel text-lg text-black sm:text-2xl">{t("s3.clear")}</div>
             <div className="rpg-box p-4 font-thai">
-              เก็บคำสำคัญครบ {questions.length} คำ! ผิดไป {mistakes} ครั้ง
-              <div className="mt-1 text-sm text-red-300">⚠️ ต่อไปคือบอสข้อสอบจริง 20 ข้อ จับเวลา 60 วินาทีต่อข้อ!</div>
+              {t("s3.done")} {questions.length} • {t("s3.mistakes")}: {mistakes}
+              <div className="mt-1 text-sm text-red-300">{t("s3.warn")}</div>
             </div>
             <PxButton variant="danger" thai className="!text-lg" onClick={onComplete}>
-              👾 บุกปราสาทบอส ➔
+              {t("s3.goBoss")}
             </PxButton>
           </div>
         )}

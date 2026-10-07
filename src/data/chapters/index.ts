@@ -9,7 +9,10 @@
  *  วิธีเพิ่มบทใหม่: คัดลอก _template.ts แล้ว import + เพิ่มในตารางนี้
  * =====================================================================
  */
-import type { ChapterContent } from "../types";
+import type { ChapterContent, ExamQuestion } from "../types";
+import { extrasM4 } from "./extras/m4";
+import { extrasM5 } from "./extras/m5";
+import { extrasM6 } from "./extras/m6";
 import { chapter1 } from "./ch01";
 import { chapter2 } from "./ch02";
 import { chapter3 } from "./ch03";
@@ -36,32 +39,43 @@ import { chapter23 } from "./ch23";
 import { chapter24 } from "./ch24";
 import { chapter25 } from "./ch25";
 
+/**
+ * รวมคลังข้อสอบเสริม (ยาก) เข้า pool ของแต่ละบท
+ * pool = ข้อเดิม 20 + ข้อเสริม 10-12 = 30+ ข้อ → สุ่มเล่น 20 ข้อ/รอบ
+ */
+const ALL_EXTRAS: Record<number, ExamQuestion[]> = { ...extrasM4, ...extrasM5, ...extrasM6 };
+function withExtras(content: ChapterContent): ChapterContent {
+  const extra = ALL_EXTRAS[content.chapterId];
+  if (!extra || extra.length === 0) return content;
+  return { ...content, boss: { ...content.boss, questions: [...content.boss.questions, ...extra] } };
+}
+
 export const CHAPTER_CONTENT: Record<number, ChapterContent> = {
-  1: chapter1,
-  2: chapter2,
-  3: chapter3,
-  4: chapter4,
-  5: chapter5,
-  6: chapter6,
-  7: chapter7,
-  8: chapter8,
-  9: chapter9,
-  10: chapter10,
-  11: chapter11,
-  12: chapter12,
-  13: chapter13,
-  14: chapter14,
-  15: chapter15,
-  16: chapter16,
-  17: chapter17,
-  18: chapter18,
-  19: chapter19,
-  20: chapter20,
-  21: chapter21,
-  22: chapter22,
-  23: chapter23,
-  24: chapter24,
-  25: chapter25,
+  1: withExtras(chapter1),
+  2: withExtras(chapter2),
+  3: withExtras(chapter3),
+  4: withExtras(chapter4),
+  5: withExtras(chapter5),
+  6: withExtras(chapter6),
+  7: withExtras(chapter7),
+  8: withExtras(chapter8),
+  9: withExtras(chapter9),
+  10: withExtras(chapter10),
+  11: withExtras(chapter11),
+  12: withExtras(chapter12),
+  13: withExtras(chapter13),
+  14: withExtras(chapter14),
+  15: withExtras(chapter15),
+  16: withExtras(chapter16),
+  17: withExtras(chapter17),
+  18: withExtras(chapter18),
+  19: withExtras(chapter19),
+  20: withExtras(chapter20),
+  21: withExtras(chapter21),
+  22: withExtras(chapter22),
+  23: withExtras(chapter23),
+  24: withExtras(chapter24),
+  25: withExtras(chapter25),
 };
 
 export function getChapterContent(id: number): ChapterContent | null {

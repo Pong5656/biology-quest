@@ -165,6 +165,9 @@ export interface SpriteSheet {
   boss: HTMLCanvasElement;
   tiles: Partial<Record<Tile, HTMLCanvasElement>>;
   question: HTMLCanvasElement[]; // เฟรมเรืองแสง
+  coin: HTMLCanvasElement[]; // เฟรมหมุน 2 เฟรม
+  heart: HTMLCanvasElement;
+  star: HTMLCanvasElement[]; // เฟรม 2 เฟรม
 }
 
 export function buildSprites(): SpriteSheet {
@@ -278,6 +281,91 @@ export function buildSprites(): SpriteSheet {
     }),
   };
 
+  /* ---------------- ไอเทม: เหรียญ / หัวใจ / ดาว ---------------- */
+  const COIN_PAL: Palette = { Y: "#f8d800", O: "#e59400", W: "#fff" };
+  const coinA = fromRows(
+    [
+      "....YYYY....",
+      "...YYYYYY...",
+      "..YYWWWWYY..",
+      "..YWYYYYWY..",
+      "..YWYYYYWY..",
+      "..YWYYYYWY..",
+      "..YWYYYYWY..",
+      "..YWYYYYWY..",
+      "..YYWWWWYY..",
+      "...YYYYYY...",
+      "....YYYY....",
+    ],
+    COIN_PAL,
+  );
+  const coinB = fromRows(
+    [
+      "......YY......",
+      ".....YYYY.....",
+      "....YYWWYY....",
+      "....YWYWYY....",
+      "....YWYWYY....",
+      "....YWYWYY....",
+      "....YWYWYY....",
+      "....YWYWYY....",
+      "....YYWWYY....",
+      ".....YYYY.....",
+      "......YY......",
+    ],
+    COIN_PAL,
+  );
+  const HEART_PAL: Palette = { R: "#e40058", D: "#a0003c", W: "#fff" };
+  const heart = fromRows(
+    [
+      "..RR....RR..",
+      ".RRRR..RRRR.",
+      "RRWWRRRRRRRR",
+      "RRWWRRRRRRRR",
+      "RRRRRRRRRRRR",
+      "RDRRRRRRRRRD",
+      ".DRRRRRRRRD.",
+      "..DRRRRRRD..",
+      "...DRRRRD...",
+      "....DRRD....",
+      ".....DD.....",
+    ],
+    HEART_PAL,
+  );
+  const STAR_PAL: Palette = { Y: "#f8d800", O: "#e59400", W: "#fff" };
+  const starA = fromRows(
+    [
+      ".......YY.....",
+      "......YYYY....",
+      "......YYYY....",
+      ".YYYYYYYYYYYY.",
+      "YYYYYYYYYYYYYY",
+      ".YYYYYYYYYYYY.",
+      "..YYYYYYYYYY..",
+      "...YYYYYYYY...",
+      "...YYYYYYYY...",
+      "..YYYY..YYYY..",
+      ".YYYY....YYYY.",
+    ],
+    STAR_PAL,
+  );
+  const starB = fromRows(
+    [
+      "......YY......",
+      ".....YYYY.....",
+      ".YYYYYYYYYYYY.",
+      "YYYYWWYYYYYYYY",
+      ".YYYYYYYYYYYY.",
+      "..YYYYYYYYYY..",
+      "...YYYYYYYY...",
+      "....YYYYYY....",
+      "...YYYYYYYY...",
+      "..YYYY..YYYY..",
+      "............",
+    ],
+    STAR_PAL,
+  );
+
   return {
     player,
     enemy: {
@@ -288,5 +376,8 @@ export function buildSprites(): SpriteSheet {
     boss: fromRows(BOSS_ROWS, BOSS_PAL),
     tiles,
     question: [questionBlock("#f8b800"), questionBlock("#fcc838"), questionBlock("#fcd860"), questionBlock("#fcc838")],
+    coin: [coinA, coinB],
+    heart,
+    star: [starA, starB],
   };
 }

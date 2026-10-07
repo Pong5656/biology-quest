@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { TheorySlide } from "@/data/types";
 import { ProfessorAvatar, PxButton } from "@/components/game/Pixels";
 import { sfx } from "@/lib/sfx";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   slides: TheorySlide[];
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function TheorySlides({ slides, onComplete }: Props) {
+  const { t } = useI18n();
   const [idx, setIdx] = useState(0);
   const [typed, setTyped] = useState(0);
   const slide = slides[idx];
@@ -86,7 +88,7 @@ export default function TheorySlides({ slides, onComplete }: Props) {
       {/* ฉาก */}
       <div className="flex flex-1 items-end justify-center gap-8 pb-4 pt-8 sm:gap-16">
         <div className="flex flex-col items-center">
-          <div className="mb-2 border-2 border-black bg-white px-2 py-1 font-thai text-xs font-bold text-black">ศ.ดร.คลอโรฟิลล์</div>
+          <div className="mb-2 border-2 border-black bg-white px-2 py-1 font-thai text-xs font-bold text-black">{t("s2.prof")}</div>
           <ProfessorAvatar px={6} className="anim-hop" />
         </div>
         <div key={idx} className="anim-pop mb-6 text-7xl drop-shadow-[4px_4px_0_#000] sm:text-8xl">
@@ -111,10 +113,10 @@ export default function TheorySlides({ slides, onComplete }: Props) {
         )}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
           <PxButton thai className="!px-3 !py-2 !text-sm" disabled={idx === 0} onClick={() => setIdx((i) => Math.max(0, i - 1))}>
-            ◀ ย้อนกลับ
+            {t("s2.back")}
           </PxButton>
           <PxButton variant={isLast && done ? "success" : "primary"} thai onClick={advance}>
-            {!done ? "ข้าม ▶▶" : isLast ? "ไปมินิเกม ➔" : "ถัดไป ➔"}
+            {!done ? t("s2.skip") : isLast ? t("s2.done") : t("s2.next")}
           </PxButton>
         </div>
       </div>

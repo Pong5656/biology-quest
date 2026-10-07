@@ -8,6 +8,7 @@
 import type { SummaryBoardData } from "@/data/types";
 import { ProfessorAvatar, PxButton } from "@/components/game/Pixels";
 import { sfx } from "@/lib/sfx";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   data: SummaryBoardData;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function SummaryBoard({ data, chapterTitle, onNext }: Props) {
+  const { t } = useI18n();
   return (
     <main className="mx-auto max-w-6xl px-3 py-6 sm:px-6">
       {/* กระดานไม้ */}
@@ -27,7 +29,7 @@ export default function SummaryBoard({ data, chapterTitle, onNext }: Props) {
       >
         <div className="mb-5 flex flex-col items-center gap-2 text-center">
           <div className="bg-black px-3 py-1 font-pixel text-[10px] text-yellow-300">QUEST BOARD</div>
-          <h1 className="font-thai text-2xl font-bold text-white drop-shadow-[3px_3px_0_#000] sm:text-3xl">📜 สรุปเนื้อหา: {chapterTitle}</h1>
+          <h1 className="font-thai text-2xl font-bold text-white drop-shadow-[3px_3px_0_#000] sm:text-3xl">📜 {t("s1.board")}{chapterTitle}</h1>
         </div>
 
         {/* คำแนะนำจากศาสตราจารย์ */}
@@ -77,7 +79,7 @@ export default function SummaryBoard({ data, chapterTitle, onNext }: Props) {
               onNext();
             }}
           >
-            เริ่มเรียน ➔
+            {t("s1.start")}
           </PxButton>
         </div>
       </div>

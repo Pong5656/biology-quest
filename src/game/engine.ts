@@ -20,16 +20,18 @@ import { sfx } from "@/lib/sfx";
 export const VIEW_W = 384;
 export const VIEW_H = 224;
 const STEP = 1 / 60;
-const GRAVITY = 1150;
-const JUMP_V = 365;
-const JUMP_CUT = 2.4; // แรงโน้มถ่วงคูณเพิ่มเมื่อปล่อยปุ่มกระโดดระหว่างขึ้น
-const MAX_RUN = 120;
-const ACCEL = 1000;
-const AIR_ACCEL = 750;
-const FRICTION = 1100;
-const MAX_FALL = 430;
-const COYOTE = 0.09;
-const JUMP_BUFFER = 0.12;
+const GRAVITY = 920; // ขึ้นลอยนุ่ม
+const FALL_GRAVITY = 1080; // ตกลงมาไม่กระชาก (ไม่ใช้ตัวคูณ 2.4 แบบเดิม)
+const JUMP_V = 448; // กระโดดสูงขึ้น ~1 ช่วงบล็อก
+const DOUBLE_JUMP_V = 400;
+const JUMP_CUT = 1.45;
+const MAX_RUN = 132;
+const ACCEL = 1400; // เร่งทันที ไม่รู้สึกหน่วงตอนกดเดิน
+const AIR_ACCEL = 1100;
+const FRICTION = 1400;
+const MAX_FALL = 300;
+const COYOTE = 0.1;
+const JUMP_BUFFER = 0.14;
 const INVINCIBLE = 1.5;
 const ENEMY_SPEED = 30;
 
@@ -40,6 +42,12 @@ export interface EngineCallbacks {
   onHazard: (kind: "enemy" | "pit") => void;
   /** เหยียบศัตรูสำเร็จ */
   onStomp: () => void;
+  /** เก็บเหรียญ */
+  onCoin: () => void;
+  /** เก็บหัวใจ (ฟื้นฟู 1 HP) */
+  onHeal: () => void;
+  /** เก็บดาว (พลัง 3 วินาที) */
+  onStar: () => void;
   /** cutscene บอสระเบิดจบแล้ว */
   onBossDefeated: () => void;
   /** cutscene ผู้เล่นตายจบแล้ว */
@@ -109,9 +117,10 @@ export class PlatformerEngine {
   private jumpBuffer = 0;
   private coyote = 0;
 
-  private player: Body & { facing: 1 | -1; invincible: number; hurtFlash: number; runDist: number; knock: number } ;
+  private player: Body & { facing: 1 | -1; invincible: number; hurtFlash: number; runDist: number; knock: number; starT: number; airJumps: number };
   private lastSafe = { x: 0, y: 0 };
   private enemies: Enemy[] = [];
+  private items: { kind: "coin" | "heart" | "star"; x: number; y: number; taken: boolean }[] = [];
   private particles: Particle[] = [];
   private texts: FloatText[] = [];
   private projectiles: Projectile[] = [];
@@ -133,17 +142,19 @@ export class PlatformerEngine {
     this.sprites = buildSprites();
 
     const s = this.level.spawn;
-    this.player = { x: s.x, y: s.y, w: 12, h: 16, vx: 0, vy: 0, onGround: false, facing: 1, invincible: 0, hurtFlash: 0, runDist: 0, knock: 0 };
+    // hitbox แคบกว่าสไปรต์เล็กน้อย — กันขอบพิกเซลเกี่ยวด่านโดยไม่ตั้งใจ
+    this.player = { x: s.x + 1, y: s.y + 1, w: 10, h: 15, vx: 0, vy: 0, onGround: false, facing: 1, invincible: 0, hurtFlash: 0, runDist: 0, knock: 0, starT: 0, airJumps: 1 };
     this.lastSafe = { ...s };
     this.enemies = this.level.enemies.map((e) => ({ x: e.x, y: e.y, w: 14, h: 14, vx: -ENEMY_SPEED, vy: 0, onGround: false, alive: true, squishT: 0, active: false }));
+    this.items = this.level.items.map((it) => ({ ...it, taken: false }));
     const b = this.level.boss;
     this.boss = { ...this.boss, x: b.x, y: b.y, w: b.w, h: b.h, hp: bossHp, maxHp: bossHp };
   }
 
   /* =================== Public API =================== */
   start() {
-    window.addEventListener("keydown", this.onKeyDown);
-    window.addEventListener("keyup", this.onKeyUp);
+    window.addEventListener("keydown", this.onKeyDown, { passive: false });
+    window.addEventListener("keyup", this.onKeyUp, { passive: false });
     window.addEventListener("blur", this.clearInput);
     this.last = performance.now();
     this.raf = requestAnimationFrame(this.frame);
@@ -223,11 +234,12 @@ export class PlatformerEngine {
   }
   private onKeyDown = (e: KeyboardEvent) => {
     const tag = (e.target as HTMLElement | null)?.tagName;
-    if (tag === "INPUT" || tag === "TEXTAREA") return;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
     const k = this.mapKey(e);
     if (!k) return;
-    e.preventDefault(); // กันหน้าเลื่อนเมื่อกด Space/ลูกศร
+    e.preventDefault();
     if (this.mode !== "play") return;
+    // ตั้งค่าทันทีในเฟรมที่กด — ไม่รอ React
     if (k === "jump" && !e.repeat && !this.keys.jump) this.jumpBuffer = JUMP_BUFFER;
     this.keys[k] = true;
   };
@@ -341,6 +353,7 @@ export class PlatformerEngine {
     if (this.mode === "play") {
       this.updatePlayer(dt);
       this.updateEnemies(dt);
+      this.updateItems();
       this.updateCamera(dt, this.player.x + this.player.w / 2);
       // หน่วงเปิดคำถามหลังบล็อกเด้ง
       if (this.pendingBlockHit >= 0) {
@@ -373,6 +386,8 @@ export class PlatformerEngine {
     if (p.invincible > 0) p.invincible -= dt;
     if (p.hurtFlash > 0) p.hurtFlash -= dt;
 
+    if (p.starT > 0) p.starT -= dt;
+
     // แนวนอน: เร่ง/เบรก
     if (dir !== 0 && p.knock <= 0) {
       p.vx += dir * (p.onGround ? ACCEL : AIR_ACCEL) * dt;
@@ -383,18 +398,25 @@ export class PlatformerEngine {
       p.vx = Math.abs(p.vx) <= f ? 0 : p.vx - Math.sign(p.vx) * f;
     }
 
-    // กระโดด (coyote + buffer)
+    // กระโดดคู่: ครั้งแรกใช้ coyote, ครั้งที่สองใช้ airJumps (รีเซ็ตเมื่อแตะพื้น)
+    if (p.onGround) p.airJumps = 1;
     this.coyote = p.onGround ? COYOTE : this.coyote - dt;
     this.jumpBuffer -= dt;
-    if (this.jumpBuffer > 0 && this.coyote > 0) {
-      p.vy = -JUMP_V;
+    if (this.jumpBuffer > 0 && (this.coyote > 0 || p.airJumps > 0)) {
+      const second = this.coyote <= 0;
+      if (second) p.airJumps -= 1;
+      p.vy = second ? -DOUBLE_JUMP_V : -JUMP_V;
       this.jumpBuffer = 0;
       this.coyote = 0;
       sfx.jump();
+      if (second) {
+        for (let i = 0; i < 5; i++) this.addParticle(p.x + 4, p.y + p.h, "#fcfcfc");
+      }
     }
 
-    // แรงโน้มถ่วง (ปล่อยปุ่ม = ตกเร็วขึ้น → กระโดดเตี้ย)
-    const g = p.vy < 0 && !inp.jump ? GRAVITY * JUMP_CUT : GRAVITY;
+    // ตกนุ่ม: ไม่คูณแรงโน้มถ่วงแรงตอนปล่อยปุ่ม
+    const risingCut = p.vy < 0 && !inp.jump;
+    const g = risingCut ? GRAVITY * JUMP_CUT : p.vy > 40 ? FALL_GRAVITY : GRAVITY;
     p.vy = Math.min(MAX_FALL, p.vy + g * dt);
 
     if (this.moveX(p, dt)) p.vx = 0;
@@ -473,22 +495,60 @@ export class PlatformerEngine {
       if (e.y > this.level.rows * TILE + 32) e.alive = false;
 
       // ชนผู้เล่น
-      if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) {
-        const stomp = p.vy > 0 && p.y + p.h - e.y < 9;
+      const overlapX = Math.min(p.x + p.w, e.x + e.w) - Math.max(p.x, e.x);
+      const overlapY = Math.min(p.y + p.h, e.y + e.h) - Math.max(p.y, e.y);
+      // ต้องทับกันจริง ๆ ไม่นับการเฉี่ยวขอบ 1 พิกเซล
+      if (overlapX > 3 && overlapY > 3) {
+        const stomp = p.vy > 0 && p.y + p.h - e.y < 10;
+        if (p.starT > 0) {
+          // ดาวพลัง: ชนศัตรูแล้วศัตรูตาย (เหมือนมาริโอ)
+          e.alive = false;
+          e.squishT = 0.5;
+          this.addText(e.x, e.y - 8, "+200", "#f8d800");
+          sfx.explode();
+          continue;
+        }
         if (stomp) {
           e.alive = false;
           e.squishT = 0.5;
-          p.vy = -260;
+          p.vy = -320;
           this.addText(e.x, e.y - 8, "+100", "#ffffff");
           sfx.stomp();
           this.cb.onStomp();
         } else if (p.invincible <= 0) {
-          p.invincible = INVINCIBLE;
+          p.invincible = INVINCIBLE; // ดาวพลังกันความเสียหายด้วย (starT>0 จะถูกจับในกิ่งก่อน)
           p.knock = 0.25;
           p.vx = (p.x < e.x ? -1 : 1) * 160;
           p.vy = -200;
           sfx.wrong();
           this.cb.onHazard("enemy");
+        }
+      }
+    }
+  }
+
+  /** เก็บไอเทม (เหรียญ / หัวใจ / ดาว) */
+  private updateItems() {
+    const p = this.player;
+    for (const it of this.items) {
+      if (it.taken) continue;
+      const bob = Math.sin(this.time * 3 + it.x * 0.1) * 2;
+      const ix = it.x, iy = it.y + bob;
+      if (p.x < ix + 12 && p.x + p.w > ix && p.y < iy + 12 && p.y + p.h > iy) {
+        it.taken = true;
+        if (it.kind === "coin") {
+          this.addText(ix - 4, iy - 10, "+50", "#f8d800");
+          sfx.coin();
+          this.cb.onCoin();
+        } else if (it.kind === "heart") {
+          this.addText(ix - 4, iy - 10, "+1 ❤", "#ff5c8a");
+          sfx.heal();
+          this.cb.onHeal();
+        } else {
+          this.addText(ix - 8, iy - 10, "STAR!", "#f8d800");
+          sfx.star();
+          p.starT = 3;
+          this.cb.onStar();
         }
       }
     }
@@ -621,6 +681,18 @@ export class PlatformerEngine {
       else if (e.squishT > 0) g.drawImage(S.enemy.squish, ex, Math.round(e.y) - 2);
     }
 
+    // ไอเทม (เหรียญ / หัวใจ / ดาว)
+    for (const it of this.items) {
+      if (it.taken) continue;
+      const x = Math.round(it.x - cam);
+      if (x < -16 || x > VIEW_W + 16) continue;
+      const bob = Math.round(Math.sin(this.time * 3 + it.x * 0.1) * 2);
+      const y = Math.round(it.y + bob);
+      if (it.kind === "coin") g.drawImage(S.coin[Math.floor(this.time * 6) % 2], x, y);
+      else if (it.kind === "heart") g.drawImage(S.heart, x - 1, y - 1);
+      else g.drawImage(S.star[Math.floor(this.time * 8) % 2], x - 1, y - 1);
+    }
+
     // กระสุนพลังงาน
     for (const pr of this.projectiles) {
       const x = Math.round(pr.x - cam);
@@ -644,6 +716,16 @@ export class PlatformerEngine {
       if (p.hurtFlash > 0 && Math.floor(p.hurtFlash * 12) % 2 === 0) {
         g.fillStyle = "rgba(255,0,60,0.55)";
         g.fillRect(Math.round(p.x - cam - 2), Math.round(p.y), 16, 16);
+      }
+      // ดาวพลัง: ตัวละครเป็นสีทองกะพริบ + ดาวอยู่เหนือหัว
+      if (p.starT > 0) {
+        if (Math.floor(p.starT * 10) % 2 === 0) {
+          g.globalCompositeOperation = "source-atop";
+          g.fillStyle = "rgba(248,216,0,0.9)";
+          g.fillRect(Math.round(p.x - cam - 2), Math.round(p.y), 16, 16);
+          g.globalCompositeOperation = "source-over";
+        }
+        g.drawImage(S.star[Math.floor(this.time * 10) % 2], Math.round(p.x - cam - 2), Math.round(p.y) - 12);
       }
     }
 

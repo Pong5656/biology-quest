@@ -6,6 +6,7 @@ import { WORLDS } from "@/data/curriculum";
 import { isChapterAvailable } from "@/data/chapters";
 import type { ChapterMeta } from "@/data/types";
 import { usePlayer, type ChapterProgress } from "@/lib/usePlayer";
+import { LangButton, useI18n } from "@/lib/i18n";
 import { PlayerAvatar, ProfessorAvatar, PxButton, SkyScene } from "@/components/game/Pixels";
 import { sfx } from "@/lib/sfx";
 
@@ -17,7 +18,8 @@ const STARTED_KEY = "bioquest.started";
  */
 export default function HomeScreen() {
   const router = useRouter();
-  const { name, progress, loading, saveName, resetAll } = usePlayer();
+  const { t, lang } = useI18n();
+  const { name, coins, progress, loading, saveName, resetAll } = usePlayer();
   const [started, setStarted] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [worldIdx, setWorldIdx] = useState(1); // เริ่มที่ ม.5 (มีบทต้นแบบ)
@@ -63,9 +65,9 @@ export default function HomeScreen() {
       <SkyScene>
         <div className="flex flex-1 flex-col items-center justify-center gap-8 px-4 pb-24 text-center">
           <div className="anim-pop">
-            <div className="font-pixel text-[10px] text-white drop-shadow-[2px_2px_0_#000] sm:text-xs">สสวท. • ชีววิทยา ม.4 - ม.6</div>
+            <div className="font-pixel text-[10px] text-white drop-shadow-[2px_2px_0_#000] sm:text-xs">{t("map.subtitle")}</div>
             <h1 className="mt-3 font-pixel text-4xl text-yellow-300 drop-shadow-[6px_6px_0_#000] sm:text-6xl">BIO QUEST</h1>
-            <div className="mt-3 inline-block bg-black px-4 py-2 font-thai text-lg font-bold text-white sm:text-2xl">ผจญภัยชีววิทยา 8-Bit</div>
+            <div className="mt-3 inline-block bg-black px-4 py-2 font-thai text-lg font-bold text-white sm:text-2xl">{t("map.title")}</div>
           </div>
           <div className="flex items-end gap-6">
             <PlayerAvatar px={6} className="anim-hop" />
@@ -74,13 +76,13 @@ export default function HomeScreen() {
           </div>
           <div className="rpg-box w-full max-w-md p-5 text-left">
             <label className="font-thai text-sm text-gray-300" htmlFor="pname">
-              ชื่อผู้เล่น
+              {t("map.pName")}
             </label>
             <input
               id="pname"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
-              placeholder="นักชีววิทยา"
+              placeholder={t("map.defName")}
               maxLength={20}
               className="mt-1 w-full border-4 border-white bg-black px-3 py-2 font-thai text-lg text-white outline-none focus:border-yellow-300"
             />
@@ -107,6 +109,7 @@ export default function HomeScreen() {
   const world = WORLDS[worldIdx];
   const totalChapters = WORLDS.reduce((s, w) => s + w.books.reduce((a, b) => a + b.chapters.length, 0), 0);
   const cleared = Object.values(progress).filter((p) => p.bossCleared).length;
+  const inProgressCount = Object.keys(progress).filter((id) => progress[Number(id)].stage > 1 || progress[Number(id)].bossCleared).length;
 
   return (
     <SkyScene bg={world.sky}>
@@ -115,9 +118,11 @@ export default function HomeScreen() {
         <div className="flex flex-wrap items-center gap-3 font-pixel text-[10px] text-white sm:text-xs">
           <span className="bg-black/70 px-3 py-2 font-thai text-sm font-bold">👤 {name}</span>
           <span className="bg-black/70 px-3 py-2">👑 {cleared}/{totalChapters}</span>
-          <span className="hidden bg-black/70 px-3 py-2 font-thai text-xs sm:inline">▶ กำลังเรียน {started} บท</span>
+          <span className="bg-black/70 px-3 py-2" title="coins">🪙 {coins}</span>
+          <span className="hidden bg-black/70 px-3 py-2 font-thai text-xs sm:inline">▶ {t("map.inProgress")} {inProgressCount}</span>
         </div>
         <div className="flex gap-2">
+          <LangButton />
           <PxButton
             thai
             className="!px-3 !py-2 !text-xs"
@@ -126,17 +131,17 @@ export default function HomeScreen() {
               setStarted(false);
             }}
           >
-            ⏏ หน้าแรก
+            {t("map.first")}
           </PxButton>
           <PxButton
             variant="danger"
             thai
             className="!px-3 !py-2 !text-xs"
             onClick={() => {
-              if (window.confirm("ล้างความคืบหน้าทั้งหมด?")) void resetAll();
+              if (window.confirm(t("map.resetAsk"))) void resetAll();
             }}
           >
-            ล้างเซฟ
+            {t("map.reset")}
           </PxButton>
         </div>
       </header>
@@ -154,8 +159,8 @@ export default function HomeScreen() {
             style={i === worldIdx ? { background: w.color } : undefined}
           >
             <div className="font-pixel text-[9px] sm:text-[10px]">WORLD {w.id}</div>
-            <div className="font-thai text-lg font-bold sm:text-2xl">{w.grade}</div>
-            <div className="hidden font-thai text-xs sm:block">{w.gradeFull}</div>
+            <div className="font-thai text-lg font-bold sm:text-2xl">{lang === "en" ? w.gradeEn : w.grade}</div>
+            <div className="hidden font-thai text-xs sm:block">{lang === "en" ? "Grade 10-12" : w.gradeFull}</div>
           </button>
         ))}
       </nav>
@@ -165,7 +170,7 @@ export default function HomeScreen() {
         {world.books.map((book) => (
           <section key={book.id} className="nes-container is-dark with-title !bg-black/75">
             <p className="title font-thai !text-base !font-bold">
-              📕 เล่ม {book.id}: {book.title}
+              📕 {lang === "en" ? `${book.titleEn} (${book.id})` : `เล่ม ${book.id}: ${book.title}`}
             </p>
             <div className="map-path flex flex-wrap items-start justify-center gap-x-6 gap-y-14 pt-14 sm:justify-start">
               {book.chapters.map((ch) => (
@@ -184,11 +189,11 @@ export default function HomeScreen() {
 
         {/* คำอธิบายสัญลักษณ์ */}
         <div className="flex flex-wrap justify-center gap-3 bg-black/70 px-4 py-3 text-center font-thai text-xs text-white">
-          <span>🟨 พร้อมเล่น</span>
-          <span>🟩 ผ่านบอสแล้ว 👑</span>
-          <span>▮▮▮▮ = ความคืบหน้า 4 ส่วน</span>
+          <span>{t("map.legendPlay")}</span>
+          <span>{t("map.legendClear")}</span>
+          <span>{t("map.legendParts")}</span>
           <span className="text-yellow-300">
-            ✅ เนื้อหาครบทั้ง {totalChapters} บท (ข้อสอบรวม {(totalChapters * 20).toLocaleString()} ข้อ)
+            {t("map.legendContent")} {totalChapters} {lang === "en" ? "CHAPTERS" : "บท"} • 🪙 {lang === "en" ? "SPEND COINS FOR HINTS (50/50 / HINT)" : "แลกคำใบ้: 50/50 (3🪙) / คำใบ้ (2🪙)"}
           </span>
         </div>
       </main>
@@ -198,16 +203,14 @@ export default function HomeScreen() {
         <div className="fixed inset-0 z-40 grid place-items-center bg-black/70 p-4" onClick={() => setComingSoon(null)}>
           <div className="rpg-box anim-pop w-full max-w-md p-6 text-center" onClick={(e) => e.stopPropagation()}>
             <div className="text-5xl">🚧</div>
-            <div className="mt-3 font-pixel text-[10px] text-yellow-300">COMING SOON</div>
+            <div className="mt-3 font-pixel text-[10px] text-yellow-300">{t("map.comingSoon")}</div>
             <div className="mt-2 font-thai text-lg font-bold">
-              บทที่ {comingSoon.id}: {comingSoon.title}
+              {lang === "en" ? `CH ${comingSoon.id}: ${comingSoon.titleEn}` : `บทที่ ${comingSoon.id}: ${comingSoon.title}`}
             </div>
-            <p className="mt-3 font-thai text-sm text-gray-300">
-              ด่านนี้ยังสร้างไม่เสร็จ! ลองเล่นบทต้นแบบ <b className="text-yellow-300">บทที่ 11 การสังเคราะห์ด้วยแสง</b> (ม.5 เล่ม 3) ก่อนนะ
-            </p>
+            <p className="mt-3 font-thai text-sm text-gray-300">{t("map.csText")}</p>
             <div className="mt-5 flex justify-center gap-3">
               <PxButton thai onClick={() => setComingSoon(null)}>
-                ปิด
+                {t("map.csClose")}
               </PxButton>
               <PxButton
                 variant="success"
@@ -218,7 +221,7 @@ export default function HomeScreen() {
                   router.push("/chapter/11");
                 }}
               >
-                ไปบทที่ 11 ➔
+                {t("map.csGo")}
               </PxButton>
             </div>
           </div>
@@ -230,9 +233,11 @@ export default function HomeScreen() {
 
 /* ---------- โหนดบทบนแผนที่ ---------- */
 function ChapterNode({ ch, available, progress, hasAvatar, onClick }: { ch: ChapterMeta; available: boolean; progress?: ChapterProgress; hasAvatar: boolean; onClick: () => void }) {
+  const { lang } = useI18n();
   const stage = progress?.stage ?? (available ? 1 : 0);
   const done = progress?.bossCleared ?? false;
   const sectionsDone = done ? 4 : Math.max(0, stage - 1);
+  const title = lang === "en" ? ch.titleEn : ch.title;
 
   return (
     <div className="relative flex w-[104px] flex-col items-center sm:w-[120px]">
@@ -243,7 +248,7 @@ function ChapterNode({ ch, available, progress, hasAvatar, onClick }: { ch: Chap
       )}
       <button
         onClick={onClick}
-        title={ch.title}
+        title={title}
         className={`px-border relative grid h-16 w-16 place-items-center transition-transform hover:scale-105 ${
           done ? "bg-green-500" : available ? "bg-yellow-400 q-glow-soft" : "bg-gray-600"
         }`}
@@ -259,7 +264,7 @@ function ChapterNode({ ch, available, progress, hasAvatar, onClick }: { ch: Chap
           <span key={n} className={`h-2 w-4 border border-black ${n <= sectionsDone ? "bg-yellow-300" : "bg-white/25"}`} />
         ))}
       </div>
-      <div className={`mt-2 text-center font-thai text-[11px] leading-tight sm:text-xs ${available ? "text-white" : "text-gray-400"}`}>{ch.title}</div>
+      <div className={`mt-2 text-center font-thai text-[11px] leading-tight sm:text-xs ${available ? "text-white" : "text-gray-400"}`}>{title}</div>
       {available && !done && <div className="anim-blink mt-1 font-pixel text-[8px] text-yellow-300">PLAY!</div>}
     </div>
   );

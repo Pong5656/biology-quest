@@ -23,18 +23,21 @@ export const k = (keyword: string, question: string, choices: [string, string, s
   explanation,
 });
 
-/** ข้อสอบ (Section 4) — 4 ตัวเลือก */
-export const q = (question: string, choices: string[], answer: number, explanation: string): ExamQuestion => ({
+/** ข้อสอบ (Section 4) — 4 ตัวเลือก (hint = คำใบ้สำหรับระบบแลกเหรียญ) */
+export const q = (question: string, choices: string[], answer: number, explanation: string, hint?: string): ExamQuestion => ({
   question,
   choices,
   answer,
   explanation,
+  ...(hint ? { hint } : {}),
 });
 
 /**
  * ประกอบบทเรียน
- * HP คำนวณอัตโนมัติ: บอส = 70% ของจำนวนข้อ, ผู้เล่น = ที่เหลือ
- * (ผลรวม = จำนวนข้อ + 1 → การต่อสู้จบได้เสมอเมื่อตอบครบทุกข้อ)
+ * - questions = คลังข้อสอบทั้งหมด (pool) เช่น 30 ข้อ
+ * - examSize = จำนวนข้อที่สุ่มมาเล่นต่อรอบ (ค่าเริ่มต้น = ทั้งหมด)
+ * - HP คำนวณจาก examSize: บอส = 70%, ผู้เล่น = ที่เหลือ
+ *   (ผลรวม = ข้อที่เล่น + 1 → การต่อสู้จบได้เสมอเมื่อตอบครบทุกข้อ)
  */
 export function chapter(
   chapterId: number,
@@ -43,8 +46,9 @@ export function chapter(
   keywords: KeywordQuestion[],
   boss: { name: string; title: string; taunt: string },
   questions: ExamQuestion[],
+  examSize = 20,
 ): ChapterContent {
-  const n = questions.length;
+  const n = Math.max(1, Math.min(examSize, questions.length));
   const hp = Math.max(3, Math.ceil(n * 0.7));
   const playerHp = Math.max(3, n + 1 - hp);
   return {
@@ -52,6 +56,6 @@ export function chapter(
     summary,
     slides,
     keywords,
-    boss: { name: boss.name, title: boss.title, taunt: boss.taunt, hp, playerHp, questionTime: 60, questions },
+    boss: { name: boss.name, title: boss.title, taunt: boss.taunt, hp, playerHp, questionTime: 60, questions, examSize: n },
   };
 }

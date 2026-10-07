@@ -25,6 +25,7 @@ function getPlayerId(): string {
 export function usePlayer() {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [name, setName] = useState("นักชีววิทยา");
+  const [coins, setCoins] = useState(0);
   const [progress, setProgress] = useState<Record<number, ChapterProgress>>({});
   const [loading, setLoading] = useState(true);
 
@@ -33,9 +34,10 @@ export function usePlayer() {
     setPlayerId(id);
     fetch(`/api/progress?playerId=${encodeURIComponent(id)}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: { player?: { name?: string }; chapters?: ChapterProgress[] } | null) => {
+      .then((data: { player?: { name?: string; coins?: number }; chapters?: ChapterProgress[] } | null) => {
         if (!data) return;
         if (data.player?.name) setName(data.player.name);
+        setCoins(data.player?.coins ?? 0);
         const map: Record<number, ChapterProgress> = {};
         for (const c of data.chapters ?? []) map[c.chapterId] = c;
         setProgress(map);
@@ -92,15 +94,38 @@ export function usePlayer() {
     [playerId],
   );
 
+  /** บันทึกเหรียญทั้งหมดในกระเป๋า (idempotent — เรียกซ้ำได้) */
+  const saveCoins = useCallback(
+    async (total: number) => {
+      if (!playerId) return;
+      try {
+        await fetch("/api/player", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ playerId, coins: total }),
+        });
+      } catch {
+        /* ignore */
+      }
+    },
+    [playerId],
+  );
+
   const resetAll = useCallback(async () => {
     setProgress({});
+    setCoins(0);
     if (!playerId) return;
     try {
       await fetch(`/api/progress?playerId=${encodeURIComponent(playerId)}`, { method: "DELETE" });
+      await fetch("/api/player", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, coins: 0 }),
+      });
     } catch {
       /* ignore */
     }
   }, [playerId]);
 
-  return { playerId, name, progress, loading, saveChapter, saveName, resetAll };
+  return { playerId, name, coins, progress, loading, saveChapter, saveName, saveCoins, resetAll };
 }

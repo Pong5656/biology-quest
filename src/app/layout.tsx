@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { I18nProvider } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "BIO QUEST — ผจญภัยชีววิทยา 8-Bit",
   description: "เกมเรียนชีววิทยา ม.ปลาย (สสวท.) สไตล์เกมคอนโซลยุค 8-bit",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover" as const,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -20,7 +29,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
         <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" />
       </head>
-      <body className="crt antialiased">{children}</body>
+      <body className="crt antialiased">
+        <I18nProvider>{children}</I18nProvider>
+      </body>
     </html>
   );
 }

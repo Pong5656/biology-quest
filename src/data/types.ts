@@ -9,17 +9,20 @@
 export interface ChapterMeta {
   id: number; // เลขบท 1-25
   title: string;
+  titleEn: string; // ชื่อภาษาอังกฤษ (สำหรับโหมด EN)
   emoji: string;
 }
 export interface Book {
   id: number; // เล่ม 1-6
   title: string;
+  titleEn: string;
   chapters: ChapterMeta[];
 }
 export interface World {
   id: number; // World 1-3
   grade: string; // "ม.4"
   gradeFull: string; // "มัธยมศึกษาปีที่ 4"
+  gradeEn: string; // "Grade 10"
   color: string; // สีหลักของ World
   sky: string; // สีพื้นหลัง
   books: Book[];
@@ -60,6 +63,7 @@ export interface ExamQuestion {
   choices: string[]; // 4 ตัวเลือก
   answer: number; // index ที่ถูก
   explanation: string;
+  hint?: string; // คำใบ้สั้น (แลกด้วยเหรียญได้)
 }
 export interface BossConfig {
   name: string;
@@ -68,7 +72,8 @@ export interface BossConfig {
   hp: number; // HP บอส
   playerHp: number; // HP ผู้เล่น
   questionTime: number; // วินาทีต่อข้อ (กติกา: 60)
-  questions: ExamQuestion[]; // 20 ข้อ
+  questions: ExamQuestion[]; // คลังข้อสอบ (pool 30 ข้อ)
+  examSize?: number; // จำนวนข้อที่สุ่มมาเล่นต่อรอบ (เช่น 20)
 }
 
 /* ---------- เนื้อหาเต็มของ 1 บท ---------- */
