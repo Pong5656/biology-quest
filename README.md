@@ -51,9 +51,12 @@ npm run typecheck  # tsc --noEmit
 
 ## ☁️ Deploy บน Vercel (ไม่ต้องตั้งค่าอะไรก็เล่นได้ครบ)
 
-1. push โค้ดขึ้น GitHub
-2. เปิด [vercel.com/new](https://vercel.com/new) → **Add New Project** → import repo → **Deploy** (Next.js ตรวจจับอัตโนมัติ)
-3. ✅ เล่นได้ครบทุกบททันที — ความคืบหน้าอยู่ในเครื่อง (เซสชัน)
-4. (ตัวเลือก) อยากได้**เซฟข้ามเครื่อง**: เพิ่ม Neon / Vercel Postgres → ตั้ง Env `DATABASE_URL` → รัน `npx drizzle-kit push` (สร้างตาราง `players` + `chapter_progress`)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FPong5656%2Fbiology-quest)
+
+> กดปุ่มด้านบน = Deploy ทันที (ล็อกอิน Vercel ในเบราว์เซอร์ตัวเอง) — รอ ~2 นาที แล้วเปิดลิงก์ที่ Vercel ให้
+> หรือทำเอง: [vercel.com/new](https://vercel.com/new) → **Add New Project** → import repo `Pong5656/biology-quest` → **Deploy** (Next.js ตรวจจับอัตโนมัติ)
+
+1. ✅ เล่นได้ครบทุกบททันที — ไม่ต้องตั้ง env อะไรเลย
+2. (ตัวเลือก) อยากได้**เซฟข้ามเครื่อง**: เพิ่ม Neon / Vercel Postgres → ตั้ง Env `DATABASE_URL` → รัน `npx drizzle-kit push` (สร้างตาราง `players` + `chapter_progress`)
 
 > ไม่มี DB = เล่นได้ครบ แต่ความคืบหน้าอยู่ในเซสชันเบราว์เซอร์เท่านั้น · มี DB = ย้ายตามเครื่องได้ (ค่าไม่มีวันลดลง)
