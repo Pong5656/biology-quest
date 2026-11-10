@@ -12,6 +12,7 @@ import SummaryBoard from "./SummaryBoard";
 import TheorySlides from "./TheorySlides";
 import KeywordCheck from "./KeywordCheck";
 import BossExam from "./BossExam";
+import PracticeExam from "./PracticeExam";
 
 /**
  * =====================================================================
@@ -28,6 +29,7 @@ export default function ChapterFlow({ chapterId }: { chapterId: number }) {
   const { progress, loading, saveChapter } = usePlayer();
   const stage = progress[chapterId]?.stage ?? 1;
   const [section, setSection] = useState<number | null>(null);
+  const [paper, setPaper] = useState(false);
   const chapterTitle = lang === "en" ? meta.chapter.titleEn : meta.chapter.title;
 
   // เปิดที่ section ล่าสุดที่ปลดล็อก (หลังโหลดเซฟเสร็จ)
@@ -140,14 +142,32 @@ export default function ChapterFlow({ chapterId }: { chapterId: number }) {
 
       {/* ============ SECTION 4 ============ */}
       {section === 4 && (
-        <BossExam
-          key={`boss-${lang}`}
-          chapterId={chapterId}
-          boss={content.boss}
-          onAttempt={() => void saveChapter(chapterId, { stage: 4, attempt: true })}
-          onVictory={(score) => void saveChapter(chapterId, { stage: 5, bossCleared: true, score })}
-          onRetryLearning={() => setSection(1)}
-        />
+        <div>
+          <div className="mx-auto flex max-w-5xl gap-2 px-3 pt-3">
+            <button type="button" className={`px-btn px-btn-thai !px-3 !py-2 !text-xs ${paper ? "" : "px-btn-primary"}`} onClick={() => setPaper(false)}>
+              🎮 มาริโอ
+            </button>
+            <button type="button" className={`px-btn px-btn-thai !px-3 !py-2 !text-xs ${paper ? "px-btn-warning" : ""}`} onClick={() => setPaper(true)}>
+              📝 แบบทดสอบทีละข้อ
+            </button>
+          </div>
+          {paper ? (
+            <PracticeExam
+              title={chapterTitle}
+              questions={content.boss.questions}
+              onExit={() => setPaper(false)}
+            />
+          ) : (
+            <BossExam
+              key={`boss-${lang}`}
+              chapterId={chapterId}
+              boss={content.boss}
+              onAttempt={() => void saveChapter(chapterId, { stage: 4, attempt: true })}
+              onVictory={(score) => void saveChapter(chapterId, { stage: 5, bossCleared: true, score })}
+              onRetryLearning={() => setSection(1)}
+            />
+          )}
+        </div>
       )}
 
     </div>

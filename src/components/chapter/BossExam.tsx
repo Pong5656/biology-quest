@@ -49,13 +49,16 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 function prepareExam(pool: ExamQuestion[], examSize: number): ExamQuestion[] {
-  const pick = Math.min(examSize, pool.length);
-  return shuffle(pool)
-    .slice(0, pick)
-    .map((q) => {
-      const order = shuffle(q.choices.map((_, i) => i));
-      return { ...q, choices: order.map((i) => q.choices[i]), answer: order.indexOf(q.answer) };
-    });
+  const reshuffleChoices = (item: ExamQuestion): ExamQuestion => {
+    const order = shuffle(item.choices.map((_, i) => i));
+    return { ...item, choices: order.map((i) => item.choices[i]), answer: order.indexOf(item.answer) };
+  };
+  const headN = Math.min(16, pool.length);
+  const head = shuffle(pool.slice(0, headN));
+  const tail = shuffle(pool.slice(headN));
+  const takeHead = Math.min(12, examSize, head.length);
+  const picked = [...head.slice(0, takeHead), ...tail.slice(0, examSize - takeHead)];
+  return shuffle(picked).map(reshuffleChoices);
 }
 
 type Phase = "intro" | "playing" | "question" | "cutscene" | "victory" | "gameover";
@@ -285,6 +288,28 @@ function BossRun({ chapterId, boss, onAttempt, onVictory, onRetryLearning, skipI
     }
   };
 
+  const hpCap = boss.playerHp + 4;
+  const buyAid = (kind: "heart" | "star") => {
+    const cost = kind === "heart" ? 2 : 3;
+    if (bankRef.current + runCoinsRef.current < cost) {
+      sfx.bump();
+      showToast(t("m.noCoins"));
+      return;
+    }
+    runCoinsRef.current -= cost;
+    setRunCoins((c) => c - cost);
+    if (kind === "heart") {
+      playerHpRef.current = Math.min(hpCap, playerHpRef.current + 1);
+      setPlayerHp(playerHpRef.current);
+      sfx.heal();
+      showToast(t("t.heal"));
+    } else {
+      engineRef.current?.grantStar(8);
+      sfx.star();
+      showToast(t("t.star"));
+    }
+  };
+
   const accuracy = answered ? Math.round((correct / answered) * 100) : 0;
   const streak = streakRef.current;
   const mult = Math.min(4, 1 + Math.floor(streak / 3));
@@ -298,7 +323,7 @@ function BossRun({ chapterId, boss, onAttempt, onVictory, onRetryLearning, skipI
         <div>
           <div className="font-pixel text-[9px] text-gray-400">PLAYER</div>
           <div className="scale-90 origin-left sm:scale-100">
-            <Hearts hp={playerHp} max={boss.playerHp} />
+            <Hearts hp={playerHp} max={hpCap} />
           </div>
         </div>
         <div className="order-3 col-span-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 font-pixel text-[10px] text-white sm:order-none sm:col-span-1 sm:text-xs">
@@ -337,6 +362,28 @@ function BossRun({ chapterId, boss, onAttempt, onVictory, onRetryLearning, skipI
         </div>
         <span className="text-sm">🏰</span>
       </div>
+
+      {/* ร้านค้า — ใช้เหรียญซื้อของช่วยเล่น ไม่บังปุ่มสัมผัส */}
+      {(phase === "playing" || phase === "intro" || phase === "question") && (
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <span className="bg-black px-2 py-1 font-pixel text-[9px] text-yellow-300">SHOP</span>
+          <button
+            type="button"
+            className="px-btn px-btn-thai !px-3 !py-2 !text-xs"
+            onClick={() => buyAid("heart")}
+          >
+            ❤️ +1 HP · 2🪙
+          </button>
+          <button
+            type="button"
+            className="px-btn px-btn-warning px-btn-thai !px-3 !py-2 !text-xs"
+            onClick={() => buyAid("star")}
+          >
+            ⭐ พลัง 8 วิ · 3🪙
+          </button>
+          <span className="font-thai text-[11px] text-gray-300">หัวใจในด่านเยอะและอยู่เตี้ย เก็บง่าย</span>
+        </div>
+      )}
 
       {/* ================= CANVAS ================= */}
       <div className="relative mx-auto w-full" style={{ maxWidth: `max(320px, calc((100vh - ${showPad ? 210 : 230}px) * ${VIEW_W / VIEW_H}))` }}>

@@ -129,17 +129,16 @@ export function buildLevel(blockCount: number): LevelData {
     }
   }
 
-  // หัวใจฟื้นฟู (3 ดวงต่อระดับ: ช่วงต้น กลาง ปลาย)
-  for (const seg of [3, 9, 15]) {
-    if (seg < blockCount) {
-      const x0 = START + seg * SEG;
-      items.push({ kind: "heart", x: (x0 + 9) * TILE + 2, y: 7 * TILE + 2 });
-    }
+  // หัวใจเยอะและอยู่เตี้ย — เก็บง่าย ไม่ต้องกระโดดสูง
+  for (let i = 0; i < blockCount; i += 2) {
+    const x0 = START + i * SEG;
+    items.push({ kind: "heart", x: (x0 + 10) * TILE + 2, y: (GROUND_ROW - 2) * TILE });
+    if (i % 4 === 0) items.push({ kind: "heart", x: (x0 + 1) * TILE + 2, y: (GROUND_ROW - 3) * TILE });
   }
-  // ดาวพลัง (1 ดวง สูงมาก ต้องกระโดดบนบล็อก/อิฐถึง)
-  if (blockCount > 7) {
-    const x0 = START + 7 * SEG;
-    items.push({ kind: "star", x: (x0 + 8) * TILE + 2, y: 4 * TILE + 2 });
+  // ดาวพลังทุก ๆ 4 ช่วง อยู่ระดับกระโดดครั้งเดียวถึง
+  for (let i = 1; i < blockCount; i += 4) {
+    const x0 = START + i * SEG;
+    items.push({ kind: "star", x: (x0 + 8) * TILE + 2, y: 8 * TILE });
   }
 
   // ----- ลานบอส -----

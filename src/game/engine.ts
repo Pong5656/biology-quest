@@ -48,6 +48,8 @@ export interface EngineCallbacks {
   onHeal: () => void;
   /** เก็บดาว (พลัง 3 วินาที) */
   onStar: () => void;
+  /** ใช้ดาวจากร้าน — ยืดเวลาพลัง */
+  // applied via grantStar()
   /** cutscene บอสระเบิดจบแล้ว */
   onBossDefeated: () => void;
   /** cutscene ผู้เล่นตายจบแล้ว */
@@ -174,6 +176,13 @@ export class PlatformerEngine {
     this.clearInput();
   }
   /** ปุ่มสัมผัสบนมือถือ */
+  /** ดาวจากร้านค้า — เรียกได้ทันทีแม้เกมหยุด */
+  grantStar(seconds = 8) {
+    this.player.starT = Math.max(this.player.starT, seconds);
+    this.addText(this.player.x, this.player.y - 14, "STAR!", "#f8d800");
+    sfx.star();
+  }
+
   setTouch(key: "left" | "right" | "jump", down: boolean) {
     if (key === "jump" && down && !this.touch.jump) this.jumpBuffer = JUMP_BUFFER;
     this.touch[key] = down;

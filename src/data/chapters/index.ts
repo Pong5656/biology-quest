@@ -38,6 +38,8 @@ import { chapter22 } from "./ch22";
 import { chapter23 } from "./ch23";
 import { chapter24 } from "./ch24";
 import { chapter25 } from "./ch25";
+import { hardQuestions } from "../hardBank";
+import { SLIDE_BOOST } from "../slideBoost";
 
 /**
  * รวมคลังข้อสอบเสริม (ยาก) เข้า pool ของแต่ละบท
@@ -45,9 +47,14 @@ import { chapter25 } from "./ch25";
  */
 const ALL_EXTRAS: Record<number, ExamQuestion[]> = { ...extrasM4, ...extrasM5, ...extrasM6 };
 function withExtras(content: ChapterContent): ChapterContent {
-  const extra = ALL_EXTRAS[content.chapterId];
-  if (!extra || extra.length === 0) return content;
-  return { ...content, boss: { ...content.boss, questions: [...content.boss.questions, ...extra] } };
+  const extra = ALL_EXTRAS[content.chapterId] ?? [];
+  const hard = hardQuestions(content.chapterId);
+  const boost = SLIDE_BOOST[content.chapterId] ?? [];
+  return {
+    ...content,
+    slides: [...content.slides, ...boost],
+    boss: { ...content.boss, questions: [...hard, ...content.boss.questions, ...extra] },
+  };
 }
 
 export const CHAPTER_CONTENT: Record<number, ChapterContent> = {
